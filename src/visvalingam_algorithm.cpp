@@ -9,9 +9,8 @@
 #include <vector>
 #include <iostream>
 #include <algorithm>
+#include <fstream>
 #include "heap.hpp"
-
-static const double NEARLY_ZERO = 1e-7;
 
 // Represents 3 vertices from the input line and its associated effective area.
 struct VertexNode
@@ -41,6 +40,8 @@ struct VertexNodeCompare
     }
 };
 
+#include <Eigen/Dense>
+
 double effective_area(const Point& c, const Point& p, const Point &n)
 {
     const Point c_n = vector_sub(n, c);
@@ -55,7 +56,7 @@ static double effective_area(VertexIndex current, VertexIndex previous,
     const Point& c = input_line[current];
     const Point& p = input_line[previous];
     const Point& n = input_line[next];
-    return effective_area(c, p, n); 
+    return effective_area(c, p, n);
 }
 
 
@@ -76,12 +77,12 @@ Visvalingam_Algorithm::Visvalingam_Algorithm(const Linestring& input)
     for (VertexIndex i=1; i < input.size()-1; ++i)
     {
         double area = effective_area(i, i-1, i+1, input);
-        if (area > NEARLY_ZERO)
-        {
-            node_list[i] = new VertexNode(i, i-1, i+1, area);
-            min_heap.insert(node_list[i]);
-        }
+        node_list[i] = new VertexNode(i, i-1, i+1, area);
+        min_heap.insert(node_list[i]);
     }
+
+    std::ofstream log;
+    log.open("area.trace");
 
     double min_area = -std::numeric_limits<double>::max();
     while (!min_heap.empty())
@@ -94,6 +95,7 @@ Visvalingam_Algorithm::Visvalingam_Algorithm(const Linestring& input)
         // that the current point cannot be eliminated without eliminating
         // previously eliminated points.)
         min_area = std::max(min_area, curr_node->area);
+        log << curr_node->vertex << " " << min_area << std::endl;
 
         VertexNode* prev_node = node_list[curr_node->prev_vertex];
         if (prev_node != NULL)
@@ -102,7 +104,7 @@ Visvalingam_Algorithm::Visvalingam_Algorithm(const Linestring& input)
             prev_node->area = effective_area(*prev_node, input);
             min_heap.reheap(prev_node);
         }
-        
+
         VertexNode* next_node = node_list[curr_node->next_vertex];
         if (next_node != NULL)
         {
@@ -136,7 +138,8 @@ void Visvalingam_Algorithm::simplify(double area_threshold,
 {
    for (VertexIndex i=0; i < m_input_line.size(); ++i)
    {
-       if (fn(i) || contains_vertex(i, area_threshold))
+       //if (fn(i) || contains_vertex(i, area_threshold))
+      if (contains_vertex(i, area_threshold))
        {
            res->push_back(m_input_line[i]);
            if (idx) {
@@ -175,6 +178,10 @@ double Visvalingam_Algorithm::area_threshold_for_ratio(size_t ratio, VertexFilte
    size_t idx = ordered_area.size() * ratio / 100;
    assert(idx >= 0);
    assert(idx < ordered_area.size());
+
+   std::cout << "cutoff idx: " << idx << std::endl;
+   std::cout << "ordered_area size: " << ordered_area.size() << std::endl;
+
    return ordered_area[idx];
 }
 
@@ -189,7 +196,6 @@ void Visvalingam_Algorithm::print_areas(std::ostream &stream) const
 void run_visvalingam(const Linestring &shape, Linestring *res)
 {
     Visvalingam_Algorithm vis_algo(shape);
-    Linestring simplified_linestring;
     vis_algo.simplify(0.002, res);
 }
 

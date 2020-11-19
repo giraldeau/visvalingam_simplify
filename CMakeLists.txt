@@ -8,6 +8,8 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
+find_package(Eigen3 REQUIRED)
+
 option(VISVALINGAM_WITH_GDAL "Use GDAL OGR format" ON)
 option(BUILD_PATHVIEWER "Build pathviewer" OFF)
 option(CONFIG_CHECK_HEAP_CONSISTENCY "Check heap consistency" OFF)
@@ -23,10 +25,13 @@ add_library(visvalingam_algorithm
   src/csv.h
   src/polyline.cpp
   src/polyline.h
+  src/decimate.cpp
+  src/decimate.h
   src/visvalingam_algorithm.cpp
   src/visvalingam_algorithm.h
 )
 target_include_directories(visvalingam_algorithm PUBLIC src)
+target_link_libraries(visvalingam_algorithm PUBLIC Eigen3::Eigen)
 if(VISVALINGAM_WITH_GDAL)
     target_link_libraries(visvalingam_algorithm PUBLIC ${GDAL_LIBRARY})
     target_include_directories(visvalingam_algorithm PUBLIC ${GDAL_INCLUDE_DIR})

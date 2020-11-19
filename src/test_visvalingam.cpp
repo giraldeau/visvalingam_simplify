@@ -152,7 +152,23 @@ void test_basic_visvalingam()
     test_linestring(&line);
 
     Visvalingam_Algorithm vis_algo(line);
-    //vis_algo.print_areas();
+    vis_algo.print_areas(std::cout);
+}
+
+void test_small_area()
+{
+   std::cout << "test_small_area" << std::endl;
+   Linestring line = {
+      Point(3.100000e-05,7.940650e+01,1.238496e+02),
+      Point(3.300000e-05,7.976700e+01,1.236168e+02),
+      Point(3.400000e-05,8.012760e+01,1.233839e+02),
+      Point(3.500000e-05,8.048810e+01,1.231511e+02),
+      Point(3.700000e-05,8.084860e+01,1.229183e+02),
+      Point(3.800000e-05,8.120470e+01,1.226793e+02),
+      Point(3.900000e-05,8.156080e+01,1.224402e+02),
+   };
+   Visvalingam_Algorithm vis_algo(line);
+   vis_algo.print_areas(std::cout);
 }
 
 bool unit_tests()
@@ -167,6 +183,7 @@ bool unit_tests()
         test_heap_reheap();
         //test_effective_area();
         test_basic_visvalingam();
+        test_small_area();
         return true;
     }
     catch (...)

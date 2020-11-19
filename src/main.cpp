@@ -11,10 +11,11 @@
 #include "ogr.h"
 #include "csv.h"
 #include "heap.hpp"
+#include "decimate.h"
 
-int export_filtered_csv(const char *filename, std::vector<int> idx)
+int export_filtered_csv(const std::string &filename, const std::string &suffix, std::vector<int> idx)
 {
-    std::ofstream os_filtered(std::string(filename) + ".filtered");
+    std::ofstream os_filtered(std::string(filename) + suffix);
     std::ifstream is(filename);
     if (!is.is_open()) {
         return 1;
@@ -37,6 +38,7 @@ int process_csv(const char *filename, bool print_source, size_t ratio, const std
 {
     Linestring shape;
     Linestring shape_simplified;
+    Linestring shape_decimated;
     std::vector<bool> keep_nodes;
     std::ifstream is(filename);
 
@@ -87,11 +89,16 @@ int process_csv(const char *filename, bool print_source, size_t ratio, const std
     Visvalingam_Algorithm vis_algo(shape);
     double threshold = vis_algo.area_threshold_for_ratio(ratio);
     std::vector<int> idx;
+    std::vector<int> idx2;
     vis_algo.simplify(threshold, &shape_simplified, &idx, keepFilter);
+
+    decimate(shape, ratio, shape_decimated, idx2);
 
     std::cout << "area threshold:   " << threshold << std::endl;
     std::cout << "original shape:   " << shape.size() << " points" << std::endl;
     std::cout << "simplified shape: " << shape_simplified.size() << " points" << std::endl;
+    std::cout << "decimateed shape: " << shape_decimated.size() << " points" << std::endl;
+
 
     std::ofstream os_pts(std::string(filename) + ".out");
     for (const Point &p : shape_simplified) {
@@ -103,7 +110,8 @@ int process_csv(const char *filename, bool print_source, size_t ratio, const std
         os_areas << effective_area(shape[i], shape[i-1], shape[i+1]) << "\n";
     }
 
-    export_filtered_csv(filename, idx);
+    export_filtered_csv(filename, ".filtered", idx);
+    export_filtered_csv(filename, ".decimated", idx);
 
     return 0;
 }
@@ -133,6 +141,7 @@ int main(int argc, char **argv)
         {
             ++i;
             ratio = static_cast<size_t>(std::atoi(argv[i]));
+            std::cout << "using ratio: " << ratio << std::endl;
         }
         else if (strcmp(argv[i], "--filter-col") == 0 && (i+1) < argc)
         {

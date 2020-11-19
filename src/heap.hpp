@@ -11,7 +11,9 @@
 #include <unordered_map>
 #include <iostream>
 
+#ifndef CHECK_HEAP_CONSISTENCY
 #define CHECK_HEAP_CONSISTENCY 0
+#endif
 
 // Special Heap to store vertex data as we process the input linestring.
 // We need a min-heap with:
