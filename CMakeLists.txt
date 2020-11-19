@@ -9,6 +9,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 option(VISVALINGAM_WITH_GDAL "Use GDAL OGR format" ON)
+option(BUILD_PATHVIEWER "Build pathviewer" OFF)
+option(CONFIG_CHECK_HEAP_CONSISTENCY "Check heap consistency" OFF)
+
 if(VISVALINGAM_WITH_GDAL)
     find_package(GDAL REQUIRED)
 endif()
@@ -29,9 +32,16 @@ if(VISVALINGAM_WITH_GDAL)
     target_include_directories(visvalingam_algorithm PUBLIC ${GDAL_INCLUDE_DIR})
     target_compile_definitions(visvalingam_algorithm PUBLIC HAVE_GDAL)
 endif()
+if(CONFIG_CHECK_HEAP_CONSISTENCY)
+    target_compile_definitions(visvalingam_algorithm PRIVATE -DCHECK_HEAP_CONSISTENCY)
+endif()
 
 add_executable(simplify src/main.cpp)
 target_link_libraries(simplify visvalingam_algorithm)
+
+if(BUILD_PATHVIEWER)
+    add_subdirectory(pathviewer)
+endif()
 
 add_executable(test_visvalingam src/test_visvalingam.cpp)
 target_link_libraries(test_visvalingam visvalingam_algorithm)
